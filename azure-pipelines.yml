@@ -1,0 +1,75 @@
+# Azure DevOps CI/CD Pipeline for FizzBuzz Case Study
+trigger:
+  branches:
+    include:
+      - main
+      - master
+      - feature/*
+
+pr:
+  branches:
+    include:
+      - main
+      - master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  pythonVersion: '3.12'
+
+stages:
+  - stage: Test
+    displayName: 'Unit Test & Quality Gate'
+    jobs:
+      - job: UnitTests
+        displayName: 'Run Unit Tests'
+        steps:
+          - task: UsePythonVersion@0
+            displayName: 'Use Python $(pythonVersion)'
+            inputs:
+              versionSpec: '$(pythonVersion)'
+              addToPath: true
+
+          - script: |
+              python -m pip install --upgrade pip
+              pip install pytest pytest-cov
+            displayName: 'Install test runner dependencies'
+
+          - script: |
+              python -m unittest discover -v
+              pytest test_fizzbuzz.py --junitxml=junit/test-results.xml --cov=fizzbuzz --cov-report=xml --cov-report=term-missing
+            displayName: 'Execute Unit Tests with Coverage'
+
+          - task: PublishTestResults@2
+            displayName: 'Publish JUnit Test Results'
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: '**/test-results.xml'
+              failTaskOnFailedTests: true
+              testRunTitle: 'FizzBuzz Unit Tests'
+
+          - task: PublishCodeCoverageResults@2
+            displayName: 'Publish Code Coverage Results'
+            condition: succeededOrFailed()
+            inputs:
+              summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage.xml'
+
+  - stage: Run
+    displayName: 'Execute FizzBuzz Script'
+    dependsOn: Test
+    condition: succeeded()
+    jobs:
+      - job: RunFizzBuzz
+        displayName: 'Run FizzBuzz (1 to 100)'
+        steps:
+          - task: UsePythonVersion@0
+            displayName: 'Use Python $(pythonVersion)'
+            inputs:
+              versionSpec: '$(pythonVersion)'
+              addToPath: true
+
+          - script: |
+              python fizzbuzz.py
+            displayName: 'Execute FizzBuzz Script'
