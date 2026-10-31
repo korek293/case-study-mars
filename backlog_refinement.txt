@@ -1,0 +1,33 @@
+================================================================================
+FIZZBUZZ CASE STUDY: STORY POINT ESTIMATION & POSSIBLE IMPROVEMENTS
+================================================================================
+
+1. STORY POINT ESTIMATION
+--------------------------------------------------------------------------------
+Estimate: 2 Story Points (or 3 Story Points including Azure Infra provisioning)
+
+
+2. HOW TO IMPROVE THIS FEATURE
+--------------------------------------------------------------------------------
+
+A. Code Design Improvements
+   - Add parameters such as `start` and `end` to the function, e.g.,
+     `printing_numbers_from_1_to_100(start: int = 1, end: int = 100)`, etc.
+
+B. Testing Improvements
+   - Add `pytest-cov` to enforce a minimum coverage threshold (e.g., >= 95%)
+     and publish coverage reports to Azure DevOps (`PublishCodeCoverageResults@2`).
+
+C. CI/CD Pipeline & Infrastructure
+   1. Dependency Caching & Security:
+      - Add the `Cache@2` task in `azure-pipelines.yml` to cache pip packages
+        and reduce pipeline execution time.
+      - Enable Dependabot / Renovate and `pip-audit` to scan `requirements.txt`
+        for known vulnerabilities.
+   2. Passwordless Authentication (OIDC):
+      - Replace Personal Access Tokens (PATs) and storage keys with Azure
+        Workload Identity Federation (OIDC) and Azure RBAC for Terraform and
+        pipeline service connections.
+   3. CI Pipeline for Terraform (`azure_infra/`):
+      - Add a pipeline stage to run `terraform fmt -check`, `terraform validate`,
+        `tflint`, and `terraform plan` on pull requests touching `azure_infra/`.
